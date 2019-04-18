@@ -1,35 +1,63 @@
 package dev.sodiq.animationsdemo
 
-import android.graphics.drawable.AnimationDrawable
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.transition.*
 import android.view.View
+import android.view.animation.LinearInterpolator
 import kotlinx.android.synthetic.main.activity_main.*
 
 
 class MainActivity : AppCompatActivity() {
 
-    lateinit var batteryAnimation:AnimationDrawable
+	private lateinit var scene1: Scene
+	private lateinit var scene2: Scene
+	private lateinit var currentScene: Scene
+	private lateinit var transition: Transition
+	private lateinit var transitionSet: TransitionSet
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-    }
+	override fun onCreate(savedInstanceState: Bundle?) {
+		super.onCreate(savedInstanceState)
+		setContentView(R.layout.activity_main)
 
-    override fun onStart() {
-        super.onStart()
+		// Step 1: Create a Scene object for both the starting and ending layout
+		scene1 = Scene.getSceneForLayout(sceneRoot, R.layout.scene1, this)
+		scene2 = Scene.getSceneForLayout(sceneRoot, R.layout.scene2, this)
 
-        targetImage.setBackgroundResource(R.drawable.battery_animation_list)
-        batteryAnimation = targetImage.background as AnimationDrawable
-        batteryAnimation.start()
-    }
 
-    // Button click event handler 
-    fun startStopAnimation(view: View) {
-        if (batteryAnimation.isRunning){
-            batteryAnimation.stop()
-        }else{
-            batteryAnimation.start()
-        }
-    }
+		// Step 2: Create a Transition object to define what type of animation you want
+//		transition = TransitionInflater.from(this).inflateTransition(R.transition.example_4)
+
+		val cbTransition = ChangeBounds()
+		cbTransition.duration = 500
+		cbTransition.interpolator = LinearInterpolator()
+
+		val fadeInTransition = Fade(Fade.IN)
+		fadeInTransition.duration = 250
+		fadeInTransition.startDelay = 400
+		fadeInTransition.addTarget(R.id.txvTitle)
+
+		val fadeOutTransition = Fade(Fade.OUT)
+		fadeOutTransition.duration = 50
+		fadeOutTransition.addTarget(R.id.txvTitle)
+
+		transitionSet = TransitionSet()
+		transitionSet.ordering = TransitionSet.ORDERING_TOGETHER
+		transitionSet.addTransition(cbTransition)
+		transitionSet.addTransition(fadeInTransition)
+		transitionSet.addTransition(fadeOutTransition)
+
+		scene1.enter()
+		currentScene = scene1	}
+
+	fun onClick(view: View) {
+		// Step 3: Call TransitionManager.go() to run animation
+		currentScene = if (currentScene === scene1){
+			TransitionManager.go(scene2, transitionSet)
+			scene2
+		}else{
+			TransitionManager.go(scene1, transitionSet)
+			scene1
+		}
+	}
 }
